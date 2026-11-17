@@ -1,3 +1,5 @@
 screenshots/*.raw.png
 __pycache__/
 *.pyc
+/previews/
+/screenshots/
