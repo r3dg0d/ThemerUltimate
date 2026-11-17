@@ -13,7 +13,7 @@ tooltip { background: rgba({{surface_rgb}}, 0.97); border: 1px solid {{edge}}; b
 tooltip label { color: {{ink}}; font-family: "{{font_ui}}", "{{font_icons}}"; padding: 4px; }
 
 #custom-logo, #workspaces, #window, #custom-kopuz, #clock, #custom-weather,
-#tray, #custom-updates, #custom-vms, #custom-storage, #pulseaudio, #custom-net, #battery {
+#tray, #custom-rec, #custom-updates, #custom-vms, #custom-storage, #pulseaudio, #custom-net, #battery {
   background: linear-gradient(135deg, rgba({{accent_rgb}}, 0.20), rgba({{surface_rgb}}, 0.86) 62%);
   border: 1px solid rgba({{primary_rgb}}, 0.16);
   border-radius: {{pill}}px;
@@ -23,17 +23,28 @@ tooltip label { color: {{ink}}; font-family: "{{font_ui}}", "{{font_icons}}"; pa
   transition: all 160ms ease;
 }
 #custom-logo:hover, #custom-kopuz:hover, #custom-weather:hover, #custom-updates:hover,
-#custom-storage:hover, #custom-vms:hover, #pulseaudio:hover, #custom-net:hover, #clock:hover {
+#custom-storage:hover, #custom-vms:hover, #custom-rec:hover, #pulseaudio:hover, #custom-net:hover, #clock:hover {
   border-color: rgba({{light_rgb}}, 0.55);
   background: linear-gradient(135deg, rgba({{primary_rgb}}, 0.32), rgba({{raised_rgb}}, 0.92) 62%);
 }
 
 /* icon-only / icon-led pills keep the Nerd Font first */
-#custom-logo, #custom-storage, #custom-vms, #custom-updates, #pulseaudio, #custom-net, #battery, #tray {
+#custom-logo, #custom-storage, #custom-vms, #custom-rec, #custom-updates, #pulseaudio, #custom-net, #battery, #tray {
   font-family: "{{font_icons}}", "{{font_ui}}", sans-serif;
 }
 #custom-logo { color: {{primary}}; font-size: 17px; padding: 0 15px 0 12px; }
 #custom-storage, #custom-vms { color: {{muted}}; padding: 0 13px; }
+/* screen recorder (galaxy-rec): themed when idle; REC red is deliberately the same in every theme */
+#custom-rec { color: {{muted}}; padding: 0 13px; }
+#custom-rec.starting { color: {{warn}}; }
+#custom-rec.recording {
+  font-family: "JetBrainsMono Nerd Font Mono", "{{font_icons}}", monospace;
+  font-weight: 700; color: #ff3b45;
+  background: rgba(255, 59, 69, 0.14);
+  border: 1px solid rgba(255, 59, 69, 0.60);
+  animation: rec-pulse 1.8s ease-in-out infinite alternate;
+}
+@keyframes rec-pulse { from { border-color: rgba(255, 59, 69, 0.70); } to { border-color: rgba(255, 59, 69, 0.15); } }
 
 #workspaces { padding: 0 6px; }
 #workspaces button {
