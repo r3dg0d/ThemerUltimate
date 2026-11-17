@@ -144,8 +144,16 @@ def run(cmd, **kw):
     except Exception: return 127
 
 def pids(name):
-    try: return [int(p) for p in subprocess.run(["pgrep", "-x", name], capture_output=True, text=True).stdout.split()]
-    except Exception: return []
+    """This user's processes called NAME, including NixOS wrappers (comm '.NAME-wrapped', cut to 15 chars)."""
+    want = {name[:15], ("." + name + "-wrapped")[:15]}
+    out, uid = [], os.getuid()
+    for d in Path("/proc").iterdir():
+        if not d.name.isdigit(): continue
+        try:
+            if d.stat().st_uid != uid: continue
+            if (d / "comm").read_text().strip() in want: out.append(int(d.name))
+        except OSError: pass
+    return out
 
 # ---------------------------------------------------------------- extra (non-template) components
 def apply_ghostty_shader(t, dry):
@@ -250,7 +258,7 @@ def cmd_apply(tid, reload=True, only=None, dry=False):
         for p in pids("waybar"): os.kill(p, signal.SIGUSR2)
     if "mako" in comps: run(["makoctl", "reload"])
     if "ghostty" in comps:   # Ghostty on Linux reloads its config on SIGUSR2
-        for p in pids("ghostty") + pids(".ghostty-wrappe"):
+        for p in pids("ghostty"):
             try: os.kill(p, signal.SIGUSR2)
             except ProcessLookupError: pass
     if "wallpaper" in comps: start_wallpaper(t)
