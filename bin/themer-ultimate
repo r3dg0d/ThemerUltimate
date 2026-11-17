@@ -1,0 +1,321 @@
+#!/usr/bin/env python3
+"""ThemerUltimate: retheme the whole desktop (niri, Ghostty, waybar, fuzzel, mako, Quickshell, GTK,
+fastfetch, wallpaper) from one JSON token file per theme.
+
+  themer-ultimate                      toggle the picker window (also: open, close)
+  themer-ultimate list [--json]        themes it can find
+  themer-ultimate current [--json]     the applied theme
+  themer-ultimate apply <id> [--no-reload] [--only a,b] [--dry-run]
+  themer-ultimate get <token>          one resolved value (colors.*, fonts.*, or a top-level key)
+  themer-ultimate render <id> <dir>    render every template into <dir> (nothing is applied)
+  themer-ultimate next                 apply the next theme in the list
+  themer-ultimate wallpaper            start the current theme's wallpaper (used by niri at login)
+
+Stdlib only. MIT. https://github.com/r3dg0d/ThemerUltimate
+"""
+import json, os, re, shutil, signal, subprocess, sys, time
+from pathlib import Path
+
+HOME = Path.home()
+CFG = Path(os.environ.get("XDG_CONFIG_HOME", HOME / ".config"))
+DATA = Path(os.environ.get("XDG_DATA_HOME", HOME / ".local/share"))
+STATE = CFG / "themer-ultimate"
+CURRENT = STATE / "current.json"
+MARK = "managed by ThemerUltimate"
+# Where the app's own files live: next to this script in a checkout, else the installed share dir.
+_here = Path(__file__).resolve().parent.parent
+ROOT = _here if (_here / "tokens.json").exists() else DATA / "themer-ultimate"
+SYS_PATH = ":".join([str(HOME / ".local/bin"), str(HOME / ".nix-profile/bin"),
+                     f"/etc/profiles/per-user/{os.environ.get('USER', '')}/bin", "/run/current-system/sw/bin",
+                     "/run/wrappers/bin", os.environ.get("PATH", "")])
+os.environ["PATH"] = SYS_PATH
+
+def die(msg, code=1):
+    print(f"themer-ultimate: {msg}", file=sys.stderr); sys.exit(code)
+
+# ---------------------------------------------------------------- themes
+def theme_dirs():
+    return [STATE / "themes", ROOT / "themes"]   # user themes win over bundled ones
+
+def all_themes():
+    found = {}
+    for d in reversed(theme_dirs()):
+        for f in sorted(d.glob("*.json")) if d.is_dir() else []:
+            try:
+                t = json.loads(f.read_text()); t["_file"] = str(f); found[t["id"]] = t
+            except Exception as e:
+                print(f"themer-ultimate: skipping {f}: {e}", file=sys.stderr)
+    return sorted(found.values(), key=lambda t: (t.get("order", 99), t["name"]))
+
+def find_theme(tid):
+    for t in all_themes():
+        if t["id"] == tid or t["name"].lower() == tid.lower(): return t
+    die(f"no theme '{tid}' (try: themer-ultimate list)")
+
+def hex2rgb(h):
+    h = h.lstrip("#"); return tuple(int(h[i:i + 2], 16) for i in (0, 2, 4))
+
+def rgb2hex(c):
+    return "#" + "".join(f"{max(0, min(255, round(v))):02x}" for v in c)
+
+def mix(a, b, t):
+    A, B = hex2rgb(a), hex2rgb(b); return rgb2hex([x + (y - x) * t for x, y in zip(A, B)])
+
+def resolve(theme):
+    """Fill derived colour tokens, validate core ones, return the full theme dict written to current.json."""
+    spec = json.loads((ROOT / "tokens.json").read_text())["tokens"]
+    colors = dict(theme.get("colors", {}))
+    missing = [k for k, v in spec.items() if "derive" not in v and k not in colors]
+    if missing: die(f"theme {theme['id']} is missing core colours: {', '.join(missing)}")
+    for k, v in spec.items():
+        if k not in colors:
+            op, a, b, t = v["derive"]; colors[k] = mix(colors[a], colors[b], t)
+    for k, v in colors.items():
+        if not re.fullmatch(r"#[0-9a-fA-F]{6}", v): die(f"{theme['id']}: colour {k}={v} is not #rrggbb")
+    out = {k: v for k, v in theme.items() if not k.startswith("_")}
+    out["colors"] = {k: colors[k].lower() for k in list(spec) + [c for c in colors if c not in spec]}
+    out.setdefault("fonts", {}); out.setdefault("shape", {}); out.setdefault("glow", {})
+    out["appliedAt"] = int(time.time())
+    return out
+
+# ---------------------------------------------------------------- templates
+def template_vals(t):
+    v = {}
+    for k, h in t["colors"].items():
+        v[k] = h; v[k + "_nohash"] = h[1:]; v[k + "_rgb"] = ", ".join(map(str, hex2rgb(h)))
+    for k, f in t["fonts"].items(): v["font_" + k] = str(f)
+    term = t.get("terminal", {})
+    for k, x in term.items():
+        if isinstance(x, (str, int, float)) and not isinstance(x, bool): v["term_" + k] = str(x)
+    v["term_blur"] = "true" if term.get("blur") else "false"
+    v["term_palette"] = "\n".join(f"palette = {i}={c}" for i, c in enumerate(term.get("palette", [])))
+    v["term_shader"] = (f"custom-shader = shaders/themer/{term['shader']}\ncustom-shader-animation = true"
+                        if term.get("shader") else "# no custom shader for this theme")
+    fr = t.get("focusRing", {})
+    v["ring_from"], v["ring_to"], v["ring_inactive"] = fr.get("from", t["colors"]["accent"]), fr.get("to", t["colors"]["light"]), fr.get("inactive", t["colors"]["raised"])
+    g = t["glow"]
+    v["glow_text"] = f"{float(g.get('text', 0)):g}"
+    v["glow_shadow"] = g.get("shadow", "#00000066")
+    v["shadow_inactive"] = g.get("shadowInactive", "#00000066")
+    v["on_accent"] = t["colors"]["void"]
+    la = t.get("launcher", {})
+    v["launcher_prompt"] = la.get("prompt", "✦  "); v["launcher_placeholder"] = la.get("placeholder", "search…")
+    v["pill"] = str(t["shape"].get("pill", 999))
+    v["icon_theme"] = t.get("iconTheme", "Papirus-Dark")
+    v["theme_name"] = t["name"]; v["theme_id"] = t["id"]; v["mode"] = t.get("mode", "dark")
+    v["mark"] = f"{MARK} ({t['name']}); edit the template in ThemerUltimate, not this file"
+    return v
+
+def render_text(text, vals, scale):
+    missing = set()
+    def sub(m):
+        key = m.group(1)
+        if key.startswith("r:"):  # {{r:12}} -> radius scaled by the theme
+            n = float(key[2:]); return str(int(round(n * scale)))
+        if key not in vals: missing.add(key); return m.group(0)
+        return vals[key]
+    out = re.sub(r"\{\{([a-zA-Z0-9_:.]+)\}\}", sub, text)
+    if missing: die(f"unknown template keys: {sorted(missing)}")
+    return out
+
+# target name -> (template path, destination, takeover)  takeover=True: whole file is generated
+def targets():
+    return {
+        "niri":    [("niri/themer.kdl", CFG / "niri/themer.kdl", True)],
+        "waybar":  [("waybar/style.css", CFG / "waybar/style.css", True)],
+        "fuzzel":  [("fuzzel/fuzzel.ini", CFG / "fuzzel/fuzzel.ini", True)],
+        "mako":    [("mako/config", CFG / "mako/config", True)],
+        "ghostty": [("ghostty/themer.conf", CFG / "ghostty/themer.conf", True)],
+        "gtk":     [("gtk/gtk.css", CFG / "gtk-3.0/gtk.css", True), ("gtk/gtk.css", CFG / "gtk-4.0/gtk.css", True)],
+    }
+
+def backup_once(dst):
+    """Back up a file the first time ThemerUltimate takes it over (no marker yet)."""
+    if dst.exists() and MARK not in dst.read_text(errors="ignore"):
+        b = dst.with_name(dst.name + ".bak-themer-" + time.strftime("%Y%m%d-%H%M%S"))
+        shutil.copy2(dst, b); print(f"  backup {b}")
+
+def atomic_write(dst, text):
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    tmp = dst.with_name("." + dst.name + ".themer-tmp"); tmp.write_text(text); os.replace(tmp, dst)
+
+def run(cmd, **kw):
+    try: return subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=10, **kw).returncode
+    except Exception: return 127
+
+def pids(name):
+    try: return [int(p) for p in subprocess.run(["pgrep", "-x", name], capture_output=True, text=True).stdout.split()]
+    except Exception: return []
+
+# ---------------------------------------------------------------- extra (non-template) components
+def apply_ghostty_shader(t, dry):
+    sh = t.get("terminal", {}).get("shader")
+    if not sh: return
+    src = ROOT / "shaders" / sh
+    if not src.exists(): die(f"shader {src} not found")
+    dst = CFG / "ghostty/shaders/themer" / sh
+    if not dry: dst.parent.mkdir(parents=True, exist_ok=True); shutil.copy2(src, dst)
+
+def ini_set(path, section, key, value):
+    lines = path.read_text().splitlines() if path.exists() else []
+    out, in_sec, done, seen_sec = [], False, False, False
+    for ln in lines:
+        s = ln.strip()
+        if s.startswith("[") and s.endswith("]"):
+            if in_sec and not done: out.append(f"{key}={value}"); done = True
+            in_sec = s[1:-1] == section; seen_sec = seen_sec or in_sec
+        elif in_sec and s.split("=", 1)[0].strip() == key:
+            out.append(f"{key}={value}"); done = True; continue
+        out.append(ln)
+    if not done:
+        if not seen_sec: out.append(f"[{section}]")
+        out.append(f"{key}={value}")
+    atomic_write(path, "\n".join(out) + "\n")
+
+def apply_gtk_settings(t, dry):
+    dark = bool(t.get("gtk", {}).get("preferDark", True))
+    if dry: return
+    for v in ("gtk-3.0", "gtk-4.0"):
+        p = CFG / v / "settings.ini"
+        backup_once_ini(p)
+        ini_set(p, "Settings", "gtk-application-prefer-dark-theme", "1" if dark else "0")
+        ini_set(p, "Settings", "gtk-icon-theme-name", t.get("iconTheme", "Papirus-Dark"))
+    run(["dconf", "write", "/org/gnome/desktop/interface/color-scheme", "'prefer-dark'" if dark else "'prefer-light'"])
+    run(["dconf", "write", "/org/gnome/desktop/interface/icon-theme", f"'{t.get('iconTheme', 'Papirus-Dark')}'"])
+
+def backup_once_ini(p):
+    flag = STATE / "backups" / (p.parent.name + "-" + p.name + ".done")
+    if p.exists() and not flag.exists():
+        b = p.with_name(p.name + ".bak-themer-" + time.strftime("%Y%m%d-%H%M%S")); shutil.copy2(p, b)
+        flag.parent.mkdir(parents=True, exist_ok=True); flag.write_text(str(b)); print(f"  backup {b}")
+
+def apply_fastfetch(t, dry):
+    dst = CFG / "fastfetch/config.jsonc"
+    ff = t.get("fastfetch")
+    if dry: return
+    if not ff:  # theme keeps fastfetch stock: remove only a file we wrote
+        if dst.exists() and MARK in dst.read_text(errors="ignore"): dst.unlink()
+        return
+    if dst.exists() and MARK not in dst.read_text(errors="ignore"):
+        print("  fastfetch: ~/.config/fastfetch/config.jsonc is yours, leaving it"); return
+    logo = {str(i + 1): c for i, c in enumerate(ff.get("logo", []))}
+    conf = {"$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
+            "logo": {"color": logo},
+            "display": {"color": {"keys": ff.get("keys"), "title": ff.get("title"), "separator": ff.get("separator"), "output": ff.get("output")}}}
+    atomic_write(dst, f"// {MARK} ({t['name']}): only colours; modules stay fastfetch's defaults\n" + json.dumps(conf, indent=2) + "\n")
+
+def wallpaper_cmd(t):
+    w = t.get("wallpaper", {})
+    if w.get("kind") == "image":
+        img = ROOT / "wallpapers" / w["file"]
+        return ["swaybg", "-m", "fill", "-c", w.get("fill", t["colors"]["void"]), "-i", str(img)]
+    return ["sh", str(CFG / "niri/wallpaper.sh")]   # the rice's own (live nebula)
+
+def start_wallpaper(t):
+    for n in ("mpvpaper", "swaybg"):
+        for p in pids(n):
+            try: os.kill(p, signal.SIGTERM)
+            except ProcessLookupError: pass
+    env = dict(os.environ, THEMER_SKIP="1")
+    subprocess.Popen(wallpaper_cmd(t), env=env, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                     stderr=subprocess.DEVNULL, start_new_session=True, cwd=str(HOME))
+
+# ---------------------------------------------------------------- commands
+COMPONENTS = ["quickshell", "niri", "waybar", "fuzzel", "mako", "ghostty", "gtk", "fastfetch", "wallpaper"]
+
+def cmd_apply(tid, reload=True, only=None, dry=False):
+    t = resolve(find_theme(tid))
+    comps = only or COMPONENTS
+    vals = template_vals(t); scale = float(t["shape"].get("radiusScale", 1.0))
+    print(f"ThemerUltimate → {t['name']}")
+    tmap = targets()
+    for comp in comps:
+        if comp not in COMPONENTS: die(f"unknown component {comp}")
+        for tpl, dst, _ in tmap.get(comp, []):
+            if comp == "gtk" and t.get("gtk", {}).get("css") is False:  # theme opts out: drop only our file
+                if not dry and dst.exists() and MARK in dst.read_text(errors="ignore"): dst.unlink()
+                continue
+            text = render_text((ROOT / "templates" / tpl).read_text(), vals, scale)
+            if dry: print(f"  would write {dst}"); continue
+            backup_once(dst); atomic_write(dst, text); print(f"  {comp:10s} {str(dst).replace(str(HOME), '~')}")
+    if "ghostty" in comps: apply_ghostty_shader(t, dry)
+    if "gtk" in comps: apply_gtk_settings(t, dry)
+    if "fastfetch" in comps: apply_fastfetch(t, dry); print("  fastfetch  " + ("colours" if t.get("fastfetch") else "stock"))
+    if dry: return
+    if "quickshell" in comps:  # last data write: every widget watches this file and restyles live
+        atomic_write(CURRENT, json.dumps(t, indent=2) + "\n"); print(f"  quickshell {str(CURRENT).replace(str(HOME), '~')}")
+    if not reload: return
+    if "niri" in comps: run(["niri", "msg", "action", "load-config-file"])
+    if "waybar" in comps:
+        for p in pids("waybar"): os.kill(p, signal.SIGUSR2)
+    if "mako" in comps: run(["makoctl", "reload"])
+    if "ghostty" in comps:   # Ghostty on Linux reloads its config on SIGUSR2
+        for p in pids("ghostty") + pids(".ghostty-wrappe"):
+            try: os.kill(p, signal.SIGUSR2)
+            except ProcessLookupError: pass
+    if "wallpaper" in comps: start_wallpaper(t)
+    print("  reloaded: niri, waybar, mako, ghostty, wallpaper; Quickshell restyles live")
+
+def current():
+    try: return json.loads(CURRENT.read_text())
+    except Exception: return None
+
+def cmd_get(key):
+    t = current() or resolve(find_theme("purple-nebula"))
+    for scope in (t.get("colors", {}), t.get("fonts", {}), t):
+        if key in scope: print(scope[key]); return
+    if "." in key:
+        cur = t
+        for part in key.split("."): cur = cur[part]
+        print(cur if not isinstance(cur, (dict, list)) else json.dumps(cur)); return
+    die(f"no token {key}")
+
+def gui(action):
+    app = CFG / "quickshell/themer-ultimate/run.sh"
+    if not app.exists(): die(f"picker not installed ({app}); run install.sh")
+    os.execvp("bash", ["bash", str(app), action])
+
+def main(a):
+    if not a: gui("toggle")
+    if a[0] in ("-h", "--help", "help"): print(__doc__.strip()); return
+    c = a[0]
+    if c in ("open", "toggle", "close", "gui"): gui("toggle" if c == "gui" else c)
+    if c == "list":
+        cur = (current() or {}).get("id")
+        ts = all_themes()
+        if "--json" in a:
+            print(json.dumps([dict(resolve(t), current=t["id"] == cur) for t in ts])); return
+        for t in ts: print(f"{'*' if t['id'] == cur else ' '} {t['id']:16s} {t['name']:16s} {t.get('tagline', '')}")
+    elif c == "current":
+        t = current()
+        if not t: die("no theme applied yet", 1)
+        print(json.dumps(t, indent=2) if "--json" in a else t["id"])
+    elif c == "apply":
+        if len(a) < 2: die("usage: apply <id>")
+        only = None
+        if "--only" in a: only = a[a.index("--only") + 1].split(",")
+        cmd_apply(a[1], reload="--no-reload" not in a, only=only, dry="--dry-run" in a)
+    elif c == "next":
+        ts = all_themes(); cur = (current() or {}).get("id")
+        i = next((n for n, t in enumerate(ts) if t["id"] == cur), -1)
+        cmd_apply(ts[(i + 1) % len(ts)]["id"])
+    elif c == "get":
+        cmd_get(a[1])
+    elif c == "render":
+        t = resolve(find_theme(a[1])); out = Path(a[2]); vals = template_vals(t)
+        for comp, lst in targets().items():
+            for tpl, _, _ in lst:
+                d = out / tpl; d.parent.mkdir(parents=True, exist_ok=True)
+                d.write_text(render_text((ROOT / "templates" / tpl).read_text(), vals, float(t["shape"].get("radiusScale", 1))))
+        (out / "current.json").write_text(json.dumps(t, indent=2)); print(f"rendered {t['name']} into {out}")
+    elif c == "wallpaper":
+        t = current() or resolve(find_theme("purple-nebula"))
+        os.environ["THEMER_SKIP"] = "1"; cmd = wallpaper_cmd(t)
+        for n in ("mpvpaper", "swaybg"):
+            for p in pids(n): os.kill(p, signal.SIGTERM)
+        os.execvp(cmd[0], cmd)
+    else:
+        die(f"unknown command {c}")
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

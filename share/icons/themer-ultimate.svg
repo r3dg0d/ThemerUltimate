@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <radialGradient id="bg" cx="30%" cy="20%" r="95%">
+      <stop offset="0" stop-color="#1a1630"/><stop offset="1" stop-color="#07060d"/>
+    </radialGradient>
+    <linearGradient id="rim" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#d4b8ff"/><stop offset="1" stop-color="#7c4dff"/>
+    </linearGradient>
+  </defs>
+  <rect x="6" y="6" width="116" height="116" rx="28" fill="url(#bg)" stroke="url(#rim)" stroke-width="3"/>
+  <!-- four theme quadrants: H4X0R, Purple Nebula, Clean Light, Matte Black -->
+  <g transform="translate(64 64)">
+    <path d="M0 0 L0 -38 A38 38 0 0 1 38 0 Z" fill="#00ff66"/>
+    <path d="M0 0 L38 0 A38 38 0 0 1 0 38 Z" fill="#b46bff"/>
+    <path d="M0 0 L0 38 A38 38 0 0 1 -38 0 Z" fill="#f5f6fa"/>
+    <path d="M0 0 L-38 0 A38 38 0 0 1 0 -38 Z" fill="#2b2b2b"/>
+    <circle r="38" fill="none" stroke="#07060d" stroke-width="2"/>
+    <circle r="13" fill="#07060d" stroke="url(#rim)" stroke-width="3"/>
+    <circle r="4" fill="#d4b8ff"/>
+  </g>
+  <circle cx="100" cy="26" r="2.2" fill="#f2f0ff"/><circle cx="24" cy="102" r="1.6" fill="#d4b8ff"/>
+</svg>

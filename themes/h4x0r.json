@@ -1,0 +1,112 @@
+{
+  "id": "h4x0r",
+  "name": "H4X0R",
+  "tagline": "Wake up, Neo. Phosphor green on pure black, digital rain in the terminal.",
+  "mode": "dark",
+  "order": 0,
+  "colors": {
+    "void": "#000000",
+    "base": "#020604",
+    "surface": "#030c07",
+    "raised": "#08200f",
+    "window": "#010703",
+    "sel": "#0c3a1b",
+    "line": "#0b2a15",
+    "edge": "#12502a",
+    "edgeHot": "#1c8a42",
+    "accent": "#00b84a",
+    "primary": "#00ff66",
+    "light": "#8dffb0",
+    "hot": "#c6ff3d",
+    "ink": "#d4ffdf",
+    "bright": "#f0fff4",
+    "text2": "#a8e8ba",
+    "muted": "#5fae78",
+    "label": "#4a9663",
+    "dim": "#2e6b43",
+    "ok": "#3dff8b",
+    "warn": "#e4ff4f",
+    "err": "#ff4d6a",
+    "red": "#ff3355",
+    "pink": "#ff6b81",
+    "cyan": "#38ffd2"
+  },
+  "fonts": {
+    "ui": "NullType",
+    "led": "Zerodot",
+    "code": "NullType",
+    "icons": "JetBrainsMono Nerd Font",
+    "terminal": "NullType",
+    "terminalSize": 12
+  },
+  "shape": {
+    "radiusScale": 0.3,
+    "pill": 4
+  },
+  "glow": {
+    "nebula": 0.55,
+    "stars": 0.5,
+    "rim": 1.0,
+    "text": 0.9,
+    "shadow": "#00ff6626",
+    "rain": 1.0
+  },
+  "terminal": {
+    "background": "#000000",
+    "foreground": "#c8ffd4",
+    "cursor": "#00ff66",
+    "cursorText": "#000000",
+    "selectionBackground": "#0c3a1b",
+    "selectionForeground": "#eaffef",
+    "opacity": 0.92,
+    "blur": true,
+    "shader": "matrix-rain.glsl",
+    "shaderNote": "ghostfx matrix/matrix-rain",
+    "palette": [
+      "#020604",
+      "#ff3355",
+      "#00ff66",
+      "#e4ff4f",
+      "#00b84a",
+      "#7dffa0",
+      "#38ffd2",
+      "#a8e8ba",
+      "#2e6b43",
+      "#ff6b81",
+      "#8dffb0",
+      "#f2ff9a",
+      "#3dff8b",
+      "#c6ffd6",
+      "#9affea",
+      "#f0fff4"
+    ]
+  },
+  "focusRing": {
+    "from": "#00b84a",
+    "to": "#8dffb0",
+    "inactive": "#08200f"
+  },
+  "wallpaper": {
+    "kind": "image",
+    "file": "h4x0r.png",
+    "fill": "#000000"
+  },
+  "iconTheme": "Papirus-Dark",
+  "gtk": {
+    "preferDark": true
+  },
+  "fastfetch": {
+    "logo": [
+      "#00ff66",
+      "#00b84a"
+    ],
+    "keys": "#00ff66",
+    "title": "#8dffb0",
+    "separator": "#2e6b43",
+    "output": "#c8ffd4"
+  },
+  "launcher": {
+    "prompt": "root@matrix:~$ ",
+    "placeholder": "follow the white rabbit…"
+  }
+}

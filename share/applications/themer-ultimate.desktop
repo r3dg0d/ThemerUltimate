@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=ThemerUltimate
+GenericName=Theme Switcher
+Comment=Retheme the whole desktop: niri, Ghostty, waybar, fuzzel, mako, GTK, wallpaper and every Quickshell widget
+Exec=@HOME@/.local/bin/themer-ultimate open
+Icon=themer-ultimate
+Terminal=false
+Categories=Settings;DesktopSettings;Utility;
+Keywords=theme;rice;colors;palette;dark;light;matrix;nebula;

@@ -1,0 +1,25 @@
+// {{mark}}
+// Included at the end of ~/.config/niri/config.kdl; niri merges these over the main layout.
+layout {
+    focus-ring {
+        width 3
+        active-gradient from="{{ring_from}}" to="{{ring_to}}" angle=45 relative-to="workspace-view"
+        inactive-color "{{ring_inactive}}"
+    }
+    shadow {
+        on
+        softness 40
+        spread 6
+        offset x=0 y=8
+        color "{{glow_shadow}}"
+        inactive-color "{{shadow_inactive}}"
+    }
+}
+
+overview {
+    backdrop-color "{{void}}"
+}
+
+binds {
+    Super+Alt+L hotkey-overlay-title="Lock screen" { spawn "swaylock" "-f" "-c" "{{void_nohash}}"; }
+}

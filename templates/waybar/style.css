@@ -1,0 +1,80 @@
+/* {{mark}} */
+/* deep-space — waybar · re-rice 2026-10-19
+   {{font_ui}} labels · {{font_led}} LED digits (clock, workspaces) · {{font_icons}} icons */
+* {
+  font-family: "{{font_ui}}", "{{font_icons}}", sans-serif;
+  font-size: 14px;
+  min-height: 0;
+  border: none;
+  border-radius: 0;
+}
+window#waybar { background: transparent; color: {{ink}}; }
+tooltip { background: rgba({{surface_rgb}}, 0.97); border: 1px solid {{edge}}; border-radius: {{r:12}}px; }
+tooltip label { color: {{ink}}; font-family: "{{font_ui}}", "{{font_icons}}"; padding: 4px; }
+
+#custom-logo, #workspaces, #window, #custom-kopuz, #clock, #custom-weather,
+#tray, #custom-updates, #custom-vms, #custom-storage, #pulseaudio, #custom-net, #battery {
+  background: linear-gradient(135deg, rgba({{accent_rgb}}, 0.20), rgba({{surface_rgb}}, 0.86) 62%);
+  border: 1px solid rgba({{primary_rgb}}, 0.16);
+  border-radius: {{pill}}px;
+  padding: 0 14px;
+  margin: 0;
+  color: {{ink}};
+  transition: all 160ms ease;
+}
+#custom-logo:hover, #custom-kopuz:hover, #custom-weather:hover, #custom-updates:hover,
+#custom-storage:hover, #custom-vms:hover, #pulseaudio:hover, #custom-net:hover, #clock:hover {
+  border-color: rgba({{light_rgb}}, 0.55);
+  background: linear-gradient(135deg, rgba({{primary_rgb}}, 0.32), rgba({{raised_rgb}}, 0.92) 62%);
+}
+
+/* icon-only / icon-led pills keep the Nerd Font first */
+#custom-logo, #custom-storage, #custom-vms, #custom-updates, #pulseaudio, #custom-net, #battery, #tray {
+  font-family: "{{font_icons}}", "{{font_ui}}", sans-serif;
+}
+#custom-logo { color: {{primary}}; font-size: 17px; padding: 0 15px 0 12px; }
+#custom-storage, #custom-vms { color: {{muted}}; padding: 0 13px; }
+
+#workspaces { padding: 0 6px; }
+#workspaces button {
+  font-family: "{{font_led}}", "{{font_icons}}", monospace;
+  color: {{dim}}; padding: 0 6px; background: transparent; border-radius: {{pill}}px; box-shadow: none;
+}
+#workspaces button.active { color: {{light}}; text-shadow: 0 0 6px rgba({{primary_rgb}}, {{glow_text}}); }
+#workspaces button.urgent { color: {{red}}; }
+#workspaces button:hover { background: rgba({{primary_rgb}}, 0.18); color: {{ink}}; }
+
+window#waybar.empty #window { background: transparent; border-color: transparent; }
+#window { color: {{muted}}; }
+
+#clock {
+  font-family: "{{font_led}}", "{{font_icons}}", monospace;
+  font-size: 17px; font-weight: 900; letter-spacing: 0px; color: {{bright}};
+  text-shadow: 0 0 3px rgba({{primary_rgb}}, {{glow_text}});
+}
+#custom-kopuz { color: {{light}}; }
+#custom-kopuz.playing { border-color: rgba({{primary_rgb}}, 0.5); }
+#custom-kopuz.paused, #custom-kopuz.idle { color: {{muted}}; }
+#custom-weather { color: {{ink}}; }
+#custom-updates.available { color: {{void}}; background: linear-gradient(135deg, {{primary}}, {{accent}}); border-color: {{light}}; }
+#custom-updates.current { padding: 0; border: none; background: transparent; }
+#custom-net { color: {{light}}; }
+#custom-net.vpn { color: {{ok}}; }
+#custom-net.down { color: {{red}}; }
+#pulseaudio { color: {{light}}; }
+#pulseaudio.muted { color: {{dim}}; }
+#battery.warning { color: {{warn}}; }
+#battery.critical { color: {{red}}; }
+
+/* power pill (rightmost) */
+#custom-power {
+  font-family: "{{font_icons}}";
+  font-size: 15px;
+  color: {{pink}};
+  padding: 0 14px 0 12px;
+  margin-right: 6px;
+  border-radius: {{r:14}}px;
+  background: rgba({{powerBg_rgb}}, 0.75);
+  border: 1px solid rgba({{pink_rgb}}, 0.35);
+}
+#custom-power:hover { background: rgba({{pink_rgb}}, 0.22); color: {{bright}}; }

@@ -1,0 +1,112 @@
+{
+  "id": "matte-black",
+  "name": "Matte Black",
+  "tagline": "Graphite and charcoal, no glow, nothing shouting.",
+  "mode": "dark",
+  "order": 3,
+  "colors": {
+    "void": "#070707",
+    "base": "#0b0b0b",
+    "surface": "#111111",
+    "raised": "#1b1b1b",
+    "window": "#0d0d0d",
+    "sel": "#2b2b2b",
+    "line": "#222222",
+    "edge": "#323232",
+    "edgeHot": "#555555",
+    "accent": "#9a9a9a",
+    "primary": "#e4e4e4",
+    "light": "#cfcfcf",
+    "hot": "#d6a35c",
+    "ink": "#ececec",
+    "bright": "#ffffff",
+    "text2": "#c2c2c2",
+    "muted": "#8e8e8e",
+    "label": "#7a7a7a",
+    "dim": "#4d4d4d",
+    "ok": "#93cf9f",
+    "warn": "#dcc27e",
+    "err": "#f07c7c",
+    "red": "#ec5f5f",
+    "pink": "#e88f8f",
+    "cyan": "#9ccfd8"
+  },
+  "fonts": {
+    "ui": "Cellforge",
+    "led": "Zerodot",
+    "code": "NullType",
+    "icons": "JetBrainsMono Nerd Font",
+    "terminal": "NullType",
+    "terminalSize": 12
+  },
+  "shape": {
+    "radiusScale": 0.55,
+    "pill": 10
+  },
+  "glow": {
+    "nebula": 0.0,
+    "stars": 0.0,
+    "rim": 0.25,
+    "text": 0.0,
+    "shadow": "#00000088",
+    "rain": 0
+  },
+  "terminal": {
+    "background": "#0a0a0a",
+    "foreground": "#dcdcdc",
+    "cursor": "#e4e4e4",
+    "cursorText": "#0a0a0a",
+    "selectionBackground": "#2b2b2b",
+    "selectionForeground": "#ffffff",
+    "opacity": 0.95,
+    "blur": true,
+    "shader": "oled-black.glsl",
+    "shaderNote": "ghostfx experimental/oled-black",
+    "palette": [
+      "#161616",
+      "#ec5f5f",
+      "#93cf9f",
+      "#dcc27e",
+      "#8fa3b8",
+      "#b9a2c4",
+      "#9ccfd8",
+      "#bdbdbd",
+      "#4d4d4d",
+      "#f07c7c",
+      "#acdcb6",
+      "#e6d39d",
+      "#a9bccf",
+      "#cdb9d6",
+      "#b5dfe6",
+      "#f2f2f2"
+    ]
+  },
+  "focusRing": {
+    "from": "#9a9a9a",
+    "to": "#e4e4e4",
+    "inactive": "#1b1b1b"
+  },
+  "wallpaper": {
+    "kind": "image",
+    "file": "matte-black.png",
+    "fill": "#070707"
+  },
+  "iconTheme": "Papirus-Dark",
+  "gtk": {
+    "preferDark": true
+  },
+  "fastfetch": {
+    "logo": [
+      "#e4e4e4",
+      "#8e8e8e"
+    ],
+    "keys": "#cfcfcf",
+    "title": "#ffffff",
+    "separator": "#4d4d4d",
+    "output": "#c2c2c2"
+  },
+  "launcher": {
+    "prompt": "›  ",
+    "placeholder": "search"
+  }
+}

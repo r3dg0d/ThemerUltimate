@@ -1,0 +1,32 @@
+/* {{mark}} */
+/* GTK 4 / libadwaita named colours */
+@define-color accent_color {{primary}};
+@define-color accent_bg_color {{accent}};
+@define-color accent_fg_color {{on_accent}};
+@define-color destructive_color {{red}};
+@define-color success_color {{ok}};
+@define-color warning_color {{warn}};
+@define-color error_color {{err}};
+@define-color window_bg_color {{window}};
+@define-color window_fg_color {{ink}};
+@define-color view_bg_color {{surface}};
+@define-color view_fg_color {{ink}};
+@define-color headerbar_bg_color {{base}};
+@define-color headerbar_fg_color {{ink}};
+@define-color headerbar_backdrop_color {{window}};
+@define-color sidebar_bg_color {{base}};
+@define-color sidebar_fg_color {{ink}};
+@define-color card_bg_color {{tile}};
+@define-color card_fg_color {{ink}};
+@define-color dialog_bg_color {{surface}};
+@define-color dialog_fg_color {{ink}};
+@define-color popover_bg_color {{raised}};
+@define-color popover_fg_color {{ink}};
+/* GTK 3 / Adwaita named colours */
+@define-color theme_bg_color {{window}};
+@define-color theme_fg_color {{ink}};
+@define-color theme_base_color {{surface}};
+@define-color theme_text_color {{ink}};
+@define-color theme_selected_bg_color {{accent}};
+@define-color theme_selected_fg_color {{on_accent}};
+@define-color borders {{line}};
