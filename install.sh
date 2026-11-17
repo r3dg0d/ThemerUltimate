@@ -45,11 +45,13 @@ if [ "$WIDGETS" = yes ] && [ -d "$qs" ]; then
     d="${d%/}"; n="$(basename "$d")"
     [ "$n" = themer-ultimate ] && continue
     [ -f "$d/shell.qml" ] || continue
-    if [ ! -L "$d/Theme.qml" ]; then   # first time: back up every QML file we may rewrite
-      for f in "$d"/*.qml; do bak "$f"; done
+    first=no; [ -L "$d/Theme.qml" ] || first=yes
+    # link Theme.qml before rewriting anything, so a running Quickshell hot-reloads into a working config
+    act ln -sfn "$share/qml/Theme.qml" "$d/Theme.qml"
+    if [ "$first" = yes ]; then   # first time: back up every QML file we may rewrite, then migrate
+      for f in "$d"/*.qml; do [ -L "$f" ] || bak "$f"; done
       act python3 "$share/tools/migrate-qml.py" "$d"
     fi
-    act ln -sfn "$share/qml/Theme.qml" "$d/Theme.qml"
     if [ -f "$d/Nebula.qml" ] && [ ! -L "$d/Nebula.qml" ]; then act rm "$d/Nebula.qml"; act ln -s "$share/qml/Nebula.qml" "$d/Nebula.qml"
     elif [ -L "$d/Nebula.qml" ]; then act ln -sfn "$share/qml/Nebula.qml" "$d/Nebula.qml"; fi
   done
