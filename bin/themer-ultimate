@@ -228,8 +228,68 @@ def start_wallpaper(t):
     subprocess.Popen(wallpaper_cmd(t), env=env, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
                      stderr=subprocess.DEVNULL, start_new_session=True, cwd=str(HOME))
 
+NEB_VOL = ["\U000f057f", "\U000f0580", "\U000f057e"]; NEB_MUTE = "\U000f075f"   # the rice's waybar volume glyphs
+
+def apply_waybar_icons(t, dry):
+    """Swap the pulseaudio glyphs in waybar's config.jsonc (only those two keys; the rest stays yours)."""
+    p = CFG / "waybar/config.jsonc"
+    if not p.exists(): return
+    g = t.get("glyphs", {})
+    icons = [g.get("volume-low", NEB_VOL[0]), g.get("volume-mid", NEB_VOL[1]), g.get("volume-high", NEB_VOL[2])]
+    muted = g.get("volume-muted", NEB_MUTE)
+    s = p.read_text()
+    m = re.search(r'"pulseaudio"\s*:\s*\{', s)
+    if not m: return
+    end = s.find("\n  }", m.end()); blk = s[m.end():end]
+    nb = re.sub(r'"format-icons"\s*:\s*\{\s*"default"\s*:\s*\[[^\]]*\]\s*\}', '"format-icons": { "default": ' + json.dumps(icons, ensure_ascii=False).replace('","', '", "') + ' }', blk)
+    nb = re.sub(r'"format-muted"\s*:\s*"[^"]*"', '"format-muted": ' + json.dumps(muted + "  muted", ensure_ascii=False), nb)
+    if nb == blk or dry: return
+    backup_once_ini(p); atomic_write(p, s[:m.end()] + nb + s[end:])
+
+# ---------------------------------------------------------------- launcher icons
+ICON_DIR = DATA / "icons/hicolor/scalable/apps"
+ICON_GLOBS = ["galaxy-*.svg", "wallpaper-deck.svg", "themer-ultimate.svg"]
+
+def icon_sources():
+    """Purple Nebula originals: bundled icons + the rice's own galaxy-* icons, snapshotted once before the first recolour."""
+    orig = STATE / "icon-originals"; orig.mkdir(parents=True, exist_ok=True)
+    for pat in ICON_GLOBS:
+        for f in ICON_DIR.glob(pat):
+            dst = orig / f.name
+            if not dst.exists() and MARK not in f.read_text(errors="ignore"): shutil.copy2(f, dst)
+    src = {f.name: f for f in sorted((ROOT / "icons").glob("*.svg"))}
+    src.update({f.name: f for f in sorted(orig.glob("*.svg")) if f.name not in src})
+    return src
+
+def recolour_svg(text, t):
+    neb = json.loads((ROOT / "themes/purple-nebula.json").read_text())["colors"]
+    cols = t["colors"]
+    pal = [(k, hex2rgb(v)) for k, v in neb.items()]
+    def nearest(h):
+        r = hex2rgb(h); k, c = min(pal, key=lambda kv: sum((a - b) ** 2 for a, b in zip(kv[1], r)))
+        return k if sum((a - b) ** 2 for a, b in zip(c, r)) < 90 ** 2 else None
+    def sub(m):
+        h = m.group(0)
+        full = "#" + "".join(ch * 2 for ch in h[1:]) if len(h) == 4 else h
+        k = nearest(full.lower())
+        return cols[k] if k and k in cols else h
+    out = []
+    for part in re.split(r"(<[^>]+>)", text):   # element by element so data-themer="keep" can opt out
+        out.append(part if 'data-themer="keep"' in part else re.sub(r"#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3}\b", sub, part))
+    s = "".join(out)
+    return s.replace("<svg", f"<!-- {MARK} ({t['name']}) -->\n<svg", 1)
+
+def apply_icons(t, dry):
+    if dry: return
+    ICON_DIR.mkdir(parents=True, exist_ok=True)
+    for name, f in icon_sources().items():
+        txt = f.read_text()
+        atomic_write(ICON_DIR / name, txt if t["id"] == "purple-nebula" and MARK not in txt else recolour_svg(txt, t))
+    os.utime(DATA / "icons/hicolor", None)
+    run(["gtk-update-icon-cache", "-f", "-t", "-q", str(DATA / "icons/hicolor")])
+
 # ---------------------------------------------------------------- commands
-COMPONENTS = ["quickshell", "niri", "waybar", "fuzzel", "mako", "ghostty", "gtk", "fastfetch", "wallpaper"]
+COMPONENTS = ["quickshell", "niri", "waybar", "fuzzel", "mako", "ghostty", "gtk", "fastfetch", "icons", "wallpaper"]
 
 def cmd_apply(tid, reload=True, only=None, dry=False):
     t = resolve(find_theme(tid))
@@ -249,6 +309,8 @@ def cmd_apply(tid, reload=True, only=None, dry=False):
     if "ghostty" in comps: apply_ghostty_shader(t, dry)
     if "gtk" in comps: apply_gtk_settings(t, dry)
     if "fastfetch" in comps: apply_fastfetch(t, dry); print("  fastfetch  " + ("colours" if t.get("fastfetch") else "stock"))
+    if "waybar" in comps: apply_waybar_icons(t, dry)
+    if "icons" in comps: apply_icons(t, dry); print("  icons      launcher SVGs recoloured")
     if dry: return
     if "quickshell" in comps:  # last data write: every widget watches this file and restyles live
         atomic_write(CURRENT, json.dumps(t, indent=2) + "\n"); print(f"  quickshell {str(CURRENT).replace(str(HOME), '~')}")

@@ -114,5 +114,18 @@
   "launcher": {
     "prompt": "›  ",
     "placeholder": "search…"
+  },
+  "glyphs": {
+    "volume-low": "󰕿",
+    "volume-mid": "󰖀",
+    "volume-high": "󰕾",
+    "volume-muted": "󰖁",
+    "mic": "󰍬",
+    "mic-muted": "󰍭",
+    "brightness": "󰃟",
+    "play": "󰐊",
+    "pause": "󰏤",
+    "next": "󰒭",
+    "previous": "󰒮"
   }
 }

@@ -46,6 +46,8 @@ Singleton {
     function rgb(col) { return Math.round(col.r * 255) + "," + Math.round(col.g * 255) + "," + Math.round(col.b * 255) }
     function rgba(col, alpha) { return "rgba(" + rgb(col) + "," + alpha + ")" }
     function r(n) { return Math.round(n * radiusScale) }
+    // per-theme icon glyphs (current.json "glyphs"), e.g. glyph("volume-high", Theme.glyph fallback); def when the theme has none
+    function glyph(name, def) { const v = d.glyphs ? d.glyphs[name] : undefined; return v ? v : def }
 
     readonly property string themeId: d.id || "purple-nebula"
     readonly property string name: d.name || "Purple Nebula"

@@ -21,7 +21,7 @@ bak() { [ -e "$1" ] && act cp -a "$1" "$1.bak-themer-$ts" && echo "  backup ${1/
 echo "ThemerUltimate → $share"
 # 1. payload (themes, templates, qml, shaders, wallpapers, CLI)
 act mkdir -p "$share" "$bindir"
-for d in bin themes templates qml shaders wallpapers app tools share; do
+for d in bin themes templates qml shaders wallpapers app tools share icons; do
   act rm -rf "$share/$d"; act cp -r "$here/$d" "$share/$d"
 done
 act cp "$here/tokens.json" "$here/LICENSE" "$share/"
@@ -36,7 +36,7 @@ act ln -sfn "$share/qml/Nebula.qml" "$qs/themer-ultimate/Nebula.qml"
 
 # 3. icon + launcher entry
 act mkdir -p "$data/icons/hicolor/scalable/apps" "$data/applications"
-act cp "$here/share/icons/themer-ultimate.svg" "$data/icons/hicolor/scalable/apps/themer-ultimate.svg"
+act cp "$here"/icons/*.svg "$data/icons/hicolor/scalable/apps/"
 [ "$DRY" = yes ] || sed "s|@HOME@|$HOME|g" "$here/share/applications/themer-ultimate.desktop" > "$data/applications/themer-ultimate.desktop"
 
 # 4. Quickshell widgets: hardcoded colours/fonts/radii -> Theme tokens, shared Theme.qml + Nebula.qml

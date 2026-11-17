@@ -129,5 +129,6 @@
   "launcher": {
     "prompt": "✦  ",
     "placeholder": "search the galaxy…"
-  }
+  },
+  "glyphs": {}
 }

@@ -108,5 +108,19 @@
   "launcher": {
     "prompt": "root@matrix:~$ ",
     "placeholder": "follow the white rabbit…"
+  },
+  "glyphs": {
+    "volume-low": "[▮▯▯]",
+    "volume-mid": "[▮▮▯]",
+    "volume-high": "[▮▮▮]",
+    "volume-muted": "[---]",
+    "mic": "[mic]",
+    "mic-muted": "[m/x]",
+    "brightness": "[*]",
+    "play": "[>]",
+    "pause": "[||]",
+    "next": "[>>]",
+    "previous": "[<<]",
+    "font": "NullType"
   }
 }
