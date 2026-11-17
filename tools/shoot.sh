@@ -35,7 +35,7 @@ if want desktop || want ghostty || want fuzzel; then
     'fastfetch --structure Title:Separator:OS:Kernel:Uptime:Packages:Shell:WM:Terminal:TerminalFont:CPU:GPU:Memory:Break:Colors; printf "\n\033[35m❯\033[0m themer-ultimate list\n"; themer-ultimate list; exec sleep 900' >/dev/null 2>&1 &
   gpid=$!; sleep 3
   want ghostty && snap ghostty 0.5
-  fuzzel --search galaxy >/dev/null 2>&1 & fpid=$!
+  fuzzel --search=galaxy >/dev/null 2>&1 & fpid=$!
   want fuzzel && snap fuzzel 1.2
   kill $fpid 2>/dev/null; sleep 0.3
   # combined: terminal + hub + power for the README

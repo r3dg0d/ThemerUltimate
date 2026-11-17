@@ -289,7 +289,8 @@ def apply_icons(t, dry):
     run(["gtk-update-icon-cache", "-f", "-t", "-q", str(DATA / "icons/hicolor")])
 
 # ---------------------------------------------------------------- commands
-COMPONENTS = ["quickshell", "niri", "waybar", "fuzzel", "mako", "ghostty", "gtk", "fastfetch", "icons", "wallpaper"]
+# icons before quickshell: widgets reload their icon URLs the moment current.json changes, so the SVGs must already be on disk
+COMPONENTS = ["icons", "quickshell", "niri", "waybar", "fuzzel", "mako", "ghostty", "gtk", "fastfetch", "wallpaper"]
 
 def cmd_apply(tid, reload=True, only=None, dry=False):
     t = resolve(find_theme(tid))

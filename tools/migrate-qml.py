@@ -31,6 +31,7 @@ SPECIAL = [
     ("Qt.rgba(1, 0.42, 0.84, t * 1.3)", "Theme.a(Theme.hot, t * 1.3)"),
     ("Qt.rgba(0.83, 0.72, 1, (t - 0.5) * 1.6)", "Theme.a(Theme.light, (t - 0.5) * 1.6)"),
     ("width * height / 9000 * density)", "width * height / 9000 * density * Theme.glowStars)"),
+    ("Quickshell.iconPath(", "Theme.appIcon("),   # recoloured launcher icons reload per theme
 ]
 
 def migrate_text(text, report):

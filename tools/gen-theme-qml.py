@@ -47,6 +47,15 @@ Singleton {
     function rgba(col, alpha) { return "rgba(" + rgb(col) + "," + alpha + ")" }
     function r(n) { return Math.round(n * radiusScale) }
     // per-theme icon glyphs (current.json "glyphs"), e.g. glyph("volume-high", Theme.glyph fallback); def when the theme has none
+    // launcher icons ThemerUltimate recolours (galaxy-*, wallpaper-deck, themer-ultimate): load the file with the
+    // theme revision in the URL (theme id + apply time; survives a
+    // Quickshell reload, unlike revision) so Qt's pixmap cache can't hand back the previous theme's SVG
+    function appIcon(name, check) {
+        const n = String(name || "")
+        if (n.startsWith("galaxy-") || n === "wallpaper-deck" || n === "themer-ultimate")
+            return "file://" + (Quickshell.env("XDG_DATA_HOME") || (Quickshell.env("HOME") + "/.local/share")) + "/icons/hicolor/scalable/apps/" + n + ".svg?v=" + (d.id || "x") + "-" + (d.appliedAt || revision)
+        return Quickshell.iconPath(n, !!check)
+    }
     function glyph(name, def) { const v = d.glyphs ? d.glyphs[name] : undefined; return v ? v : def }
 
     readonly property string themeId: d.id || "purple-nebula"
